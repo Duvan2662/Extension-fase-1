@@ -119,6 +119,40 @@ export class CaptureManager {
     })
   }
 
+  /**
+ * Captura la pestaña completa vía background (chrome.tabs.captureVisibleTab)
+ * Recibe un dataURL JPEG y lo convierte a Blob para almacenarlo igual que las demás capturas.
+ */
+  async captureScreen() {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: 'CAPTURE_SCREEN' }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message))
+          return
+        }
+        if (response?.error) {
+          reject(new Error(response.error))
+          return
+        }
+        if (!response?.dataUrl) {
+          reject(new Error('No se recibió imagen del background'))
+          return
+        }
+
+        // Convertir dataURL → Blob
+        const byteString = atob(response.dataUrl.split(',')[1])
+        const mime = 'image/jpeg'
+        const ab = new ArrayBuffer(byteString.length)
+        const ia = new Uint8Array(ab)
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i)
+        }
+        const blob = new Blob([ab], { type: mime })
+        resolve(blob)
+      })
+    })
+  }
+
   /** Elimina la última captura (tipo stack - LIFO) */
   removeLastCapture() {
     // Si no hay capturas, no hacer nada
@@ -152,6 +186,7 @@ export class CaptureManager {
     this.currentRow.push(blob)
     this.totalCount++
   }
+
 
   /** Inserta un salto de fila (nueva fila en el Excel) */
   insertRowBreak() {

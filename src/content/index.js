@@ -16,6 +16,7 @@ const overlay = new Overlay({
   onDeleteLast: handleDeleteLast,
   onExport: handleExport,
   onNewRow: handleNewRow,
+  onCaptureScreen: handleCaptureScreen,
 })
 
 // ─── Inicialización ───────────────────────────────────────────────────────────
@@ -69,6 +70,37 @@ async function handleCapture() {
     updateStats()
   } catch (err) {
     console.error('[CapturePro] Error al capturar:', err)
+    overlay.flash(`⚠ ${err.message}`, true)
+  }
+}
+
+async function handleCaptureScreen() {
+  if (captureManager.totalCount >= MAX_CAPTURES) {
+    overlay.flash(`⚠ Límite de ${MAX_CAPTURES} capturas`, true)
+    return
+  }
+
+  try {
+    // 1. Ocultar overlay para que no aparezca en la captura
+    overlay.hide()
+
+    // 2. Esperar 2 frames para asegurar que el overlay desapareció del render
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    // 3. Capturar
+    const blob = await captureManager.captureScreen()
+
+    // 4. Volver a mostrar el overlay
+    overlay.show()
+
+    // 5. Guardar igual que las demás capturas
+    captureManager.addCapture(blob)
+    overlay.screenFlash()
+    overlay.flash(`✓ Pantalla ${captureManager.totalCount} guardada`)
+    updateStats()
+  } catch (err) {
+    overlay.show() // siempre restaurar
+    console.error('[CapturePro] Error al capturar pantalla:', err)
     overlay.flash(`⚠ ${err.message}`, true)
   }
 }
@@ -178,6 +210,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         count: captureManager.totalCount,
         rows: captureManager.rows.length,
       })
+      break
+    }
+    case 'CAPTURE_SCREEN': {
+      handleCaptureScreen()
+      sendResponse({ ok: true })
       break
     }
   }
