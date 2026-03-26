@@ -1,10 +1,11 @@
 // overlay.js — Interfaz flotante draggable
 
 export class Overlay {
-  constructor({ onCapture, onExport, onNewRow }) {
+  constructor({ onCapture, onExport, onNewRow, onDeleteLast }) {
     this.onCapture = onCapture
     this.onExport = onExport
     this.onNewRow = onNewRow
+    this.onDeleteLast = onDeleteLast
     this.el = null
     this.visible = false
     this._dragState = null
@@ -63,6 +64,10 @@ export class Overlay {
           <span class="cp-btn-icon">⬤</span>
           Capturar
         </button>
+        <button class="cp-btn delete" id="cp-btn-delete">
+          <span class="cp-btn-icon">⌫</span>
+          Eliminar última
+        </button>
         <button class="cp-btn newrow" id="cp-btn-newrow">
           <span class="cp-btn-icon">↵</span>
           Nueva fila
@@ -97,6 +102,10 @@ export class Overlay {
     // Botones
     this.el.querySelector('#cp-btn-capture').addEventListener('click', () => {
       this.onCapture()
+    })
+
+    this.el.querySelector('#cp-btn-delete').addEventListener('click', () => {
+      this.onDeleteLast()
     })
 
     this.el.querySelector('#cp-btn-newrow').addEventListener('click', () => {

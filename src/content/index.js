@@ -13,6 +13,7 @@ const captureManager = new CaptureManager()
 
 const overlay = new Overlay({
   onCapture: handleCapture,
+  onDeleteLast: handleDeleteLast,
   onExport: handleExport,
   onNewRow: handleNewRow,
 })
@@ -70,6 +71,18 @@ async function handleCapture() {
     console.error('[CapturePro] Error al capturar:', err)
     overlay.flash(`⚠ ${err.message}`, true)
   }
+}
+
+function handleDeleteLast() {
+  const removed = captureManager.removeLastCapture()
+
+  if (!removed) {
+    overlay.flash('⚠ No hay capturas para eliminar', true)
+    return
+  }
+
+  overlay.flash('🗑 Última captura eliminada')
+  updateStats()
 }
 
 function handleNewRow() {

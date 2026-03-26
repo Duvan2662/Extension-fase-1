@@ -119,6 +119,31 @@ export class CaptureManager {
     })
   }
 
+  /** Elimina la última captura (tipo stack - LIFO) */
+  removeLastCapture() {
+    // Si no hay capturas, no hacer nada
+    if (this.totalCount === 0) return false
+
+    // Empezar desde la última fila hacia atrás
+    for (let i = this.rows.length - 1; i >= 0; i--) {
+      const row = this.rows[i]
+
+      if (row.length > 0) {
+        row.pop() // elimina último blob
+        this.totalCount--
+
+        // Si la fila queda vacía y no es la única, eliminarla
+        if (row.length === 0 && this.rows.length > 1) {
+          this.rows.splice(i, 1)
+        }
+
+        return true
+      }
+    }
+
+    return false
+  }
+
   /** Agrega un blob a la fila actual */
   addCapture(blob) {
     if (this.totalCount >= MAX_CAPTURES) {
