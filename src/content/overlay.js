@@ -46,8 +46,19 @@ export class Overlay {
   _template() {
     return `
       <div id="cp-header">
-        <span id="cp-title">◉ CapturePro</span>
-        <span id="cp-minimize" title="Minimizar">−</span>
+        <span id="cp-title">
+          <svg class="cp-logo" viewBox="0 0 100 30">
+            <defs>
+              <linearGradient id="dxcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6399F0"/>
+                <stop offset="100%" stop-color="#FFB475"/>
+              </linearGradient>
+            </defs>
+            <text x="0" y="20" fill="url(#dxcGradient)" font-size="20" font-family="sans-serif">DXC</text>
+          </svg>
+          Capturador
+        </span>
+          <span id="cp-minimize">−</span>
       </div>
 
       <div id="cp-stats">

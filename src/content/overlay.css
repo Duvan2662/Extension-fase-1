@@ -1,4 +1,4 @@
-/* overlay.css — Inyectado junto al content script */
+/* overlay.css — versión minimalista profesional */
 
 #capturepro-overlay {
   all: initial;
@@ -7,37 +7,43 @@
   right: 24px;
   z-index: 2147483647;
   width: 220px;
-  background: #0d0d0f;
-  border: 1px solid #2a2a30;
+
+  background: #0f1115;
+  border: 1px solid #1c1f26;
   border-radius: 10px;
+
   box-shadow:
-    0 0 0 1px rgba(200, 245, 66, 0.08),
-    0 20px 60px rgba(0, 0, 0, 0.7),
-    0 4px 12px rgba(0, 0, 0, 0.5);
+    0 10px 30px rgba(0, 0, 0, 0.5);
+
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   font-size: 13px;
-  color: #e8e8e0;
+  color: #e6e9ef;
+
   overflow: hidden;
   user-select: none;
   cursor: default;
+
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 #capturepro-overlay.hidden {
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-8px) scale(0.97);
+  transform: translateY(-6px) scale(0.98);
 }
 
-/* Header draggable */
+/* Header */
 #cp-header {
   all: initial;
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 10px 14px 8px;
-  background: #111114;
-  border-bottom: 1px solid #1e1e24;
+
+  background: #12141a;
+  border-bottom: 1px solid #1c1f26;
+
   cursor: grab;
   font-family: 'Space Mono', monospace;
 }
@@ -50,43 +56,52 @@
   all: initial;
   font-family: 'Space Mono', monospace;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #c8f542;
+
+  color: #a8c3ff; /* azul pastel */
 }
 
 #cp-minimize {
   all: initial;
   width: 16px;
   height: 16px;
-  background: #2a2a30;
+
+  background: #1c1f26;
   border-radius: 50%;
+
   cursor: pointer;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-size: 10px;
-  color: #666;
-  transition: background 0.15s;
+  color: #7a808f;
+
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 #cp-minimize:hover {
-  background: #f5a623;
-  color: #0d0d0f;
+  background: #2a2f3a;
+  color: #d0d6e2;
 }
 
-/* Contador */
+/* Stats */
 #cp-stats {
   all: initial;
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 8px 14px 6px;
+
   font-size: 11px;
   font-family: 'Space Mono', monospace;
-  color: #555;
-  border-bottom: 1px solid #1a1a1e;
+
+  color: #6f7685;
+  border-bottom: 1px solid #181b21;
 }
 
 #cp-count {
@@ -94,7 +109,7 @@
   font-family: 'Space Mono', monospace;
   font-size: 20px;
   font-weight: 700;
-  color: #e8e8e0;
+  color: #e6e9ef;
   line-height: 1;
 }
 
@@ -102,31 +117,36 @@
   all: initial;
   font-family: 'Space Mono', monospace;
   font-size: 10px;
-  color: #c8f542;
-  background: rgba(200, 245, 66, 0.08);
+
+  color: #d8bfa6;
+  background: rgba(255, 180, 117, 0.08);
+
   padding: 2px 6px;
   border-radius: 4px;
 }
 
-/* Source indicator */
+/* Source */
 #cp-source {
   all: initial;
   display: block;
   padding: 5px 14px;
+
   font-size: 10px;
   font-family: 'Space Mono', monospace;
-  color: #555;
-  border-bottom: 1px solid #1a1a1e;
+
+  color: #6f7685;
+  border-bottom: 1px solid #181b21;
 }
 
 #cp-source-tag {
   all: initial;
   font-family: 'Space Mono', monospace;
-  color: #4fa8ff;
   font-size: 10px;
+
+  color: #9fbaf5;
 }
 
-/* Botones */
+/* Buttons container */
 #cp-buttons {
   all: initial;
   display: flex;
@@ -135,96 +155,133 @@
   padding: 10px 12px 12px;
 }
 
+/* Base button */
 .cp-btn {
   all: initial;
   display: flex;
   align-items: center;
   gap: 8px;
+
   width: 100%;
   padding: 9px 12px;
-  background: #1a1a1e;
-  border: 1px solid #252528;
+
+  background: #16181f;
+  border: 1px solid #22252d;
   border-radius: 7px;
-  color: #d0d0c8;
+
+  color: #c9ceda;
+
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 12px;
   font-weight: 500;
+
   cursor: pointer;
-  transition: all 0.12s ease;
   box-sizing: border-box;
+
+  transition: background 0.15s ease, border 0.15s ease, color 0.15s ease;
 }
 
 .cp-btn:hover {
-  background: #212126;
-  border-color: #3a3a42;
-  color: #fff;
-  transform: translateY(-1px);
+  background: #1c1f26;
+  border-color: #2a2f3a;
+  color: #ffffff;
 }
 
 .cp-btn:active {
-  transform: translateY(0px);
   opacity: 0.85;
 }
 
+/* Primary (Capture) */
 .cp-btn.capture {
-  background: #c8f542;
-  border-color: #c8f542;
-  color: #0d0d0f;
-  font-weight: 700;
+  background: rgba(99, 153, 240, 0.14);
+  border-color: rgba(99, 153, 240, 0.25);
+  color: #c9dcff;
 }
 
 .cp-btn.capture:hover {
-  background: #d4f760;
-  border-color: #d4f760;
-  box-shadow: 0 0 20px rgba(200, 245, 66, 0.3);
+  background: rgba(99, 153, 240, 0.22);
+  border-color: rgba(99, 153, 240, 0.4);
+  color: #ffffff;
 }
 
+/* Screen */
+.cp-btn.screen {
+  background: #16181f;
+  border-color: #22252d;
+  color: #a8b3cf;
+}
+
+.cp-btn.screen:hover {
+  background: #1c1f26;
+  border-color: #2a2f3a;
+  color: #e6e9ef;
+}
+
+/* Excel */
 .cp-btn.excel {
-  background: rgba(79, 168, 255, 0.1);
-  border-color: rgba(79, 168, 255, 0.3);
-  color: #4fa8ff;
+  background: rgba(99, 153, 240, 0.08);
+  border-color: rgba(99, 153, 240, 0.2);
+  color: #9fbaf5;
 }
 
 .cp-btn.excel:hover {
-  background: rgba(79, 168, 255, 0.18);
-  border-color: #4fa8ff;
-  box-shadow: 0 0 16px rgba(79, 168, 255, 0.2);
+  background: rgba(99, 153, 240, 0.14);
+  border-color: rgba(99, 153, 240, 0.3);
 }
 
 .cp-btn.excel:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
+/* New row */
 .cp-btn.newrow {
-  background: rgba(245, 166, 35, 0.08);
-  border-color: rgba(245, 166, 35, 0.2);
-  color: #f5a623;
+  background: rgba(255, 180, 117, 0.08);
+  border-color: rgba(255, 180, 117, 0.18);
+  color: #e6bfa2;
 }
 
 .cp-btn.newrow:hover {
-  background: rgba(245, 166, 35, 0.15);
-  border-color: #f5a623;
+  background: rgba(255, 180, 117, 0.14);
+  border-color: rgba(255, 180, 117, 0.28);
+  color: #ffe2cc;
 }
 
+/* Delete */
+.cp-btn.delete {
+  background: rgba(255, 80, 80, 0.05);
+  border-color: rgba(255, 80, 80, 0.15);
+  color: #caa0a0;
+}
+
+.cp-btn.delete:hover {
+  background: rgba(255, 80, 80, 0.12);
+  border-color: rgba(255, 80, 80, 0.25);
+  color: #ffd6d6;
+}
+
+/* Icons */
 .cp-btn-icon {
   all: initial;
   font-size: 14px;
   line-height: 1;
   flex-shrink: 0;
+  color: inherit;
+  opacity: 0.9;
 }
 
-/* Flash feedback */
+/* Flash text */
 #cp-flash {
   all: initial;
   display: block;
   padding: 0 14px 8px;
+
   font-size: 10px;
   font-family: 'Space Mono', monospace;
-  color: #c8f542;
+
+  color: #d8bfa6;
   min-height: 16px;
+
   transition: opacity 0.3s ease;
 }
 
@@ -232,14 +289,16 @@
   opacity: 0;
 }
 
-/* Barra de progreso */
+/* Progress bar */
 #cp-progress-bar {
   all: initial;
   display: block;
+
   width: calc(100% - 24px);
   margin: 0 12px 10px;
+
   height: 2px;
-  background: #1e1e24;
+  background: #1c1f26;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -248,13 +307,15 @@
   all: initial;
   display: block;
   height: 2px;
-  background: #c8f542;
+
+  background: #7fa8f5;
   border-radius: 2px;
+
   transition: width 0.3s ease;
   width: 0%;
 }
 
-/* Animación de flash en captura */
+/* Capture flash */
 @keyframes cp-flash-anim {
   0% { opacity: 1; }
   100% { opacity: 0; }
@@ -263,7 +324,7 @@
 .cp-capture-flash {
   position: fixed;
   inset: 0;
-  background: rgba(200, 245, 66, 0.12);
+  background: rgba(99, 153, 240, 0.08);
   pointer-events: none;
   z-index: 2147483646;
   animation: cp-flash-anim 0.25s ease-out forwards;
