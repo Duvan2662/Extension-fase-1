@@ -230,4 +230,59 @@ export class CaptureManager {
   async blobToArrayBuffer(blob) {
     return blob.arrayBuffer()
   }
+
+  async saveToStorage() {
+    const serialized = []
+
+    for (const row of this.rows) {
+      const newRow = []
+      for (const blob of row) {
+        const base64 = await this._blobToBase64(blob)
+        newRow.push(base64)
+      }
+      serialized.push(newRow)
+    }
+
+    await chrome.storage.local.set({
+      captures: serialized,
+      totalCount: this.totalCount
+    })
+  }
+
+  async loadFromStorage() {
+    const data = await chrome.storage.local.get(['captures', 'totalCount'])
+
+    if (!data.captures) {
+      this.totalCount = data.totalCount || 0
+      return
+    }
+
+    this.rows = []
+
+    for (const row of data.captures) {
+      const newRow = []
+      for (const base64 of row) {
+        const blob = await fetch(base64).then(r => r.blob())
+        newRow.push(blob)
+      }
+      this.rows.push(newRow)
+    }
+
+    this.totalCount = data.totalCount || 0
+
+    if (this.rows.length === 0) {
+      this.rows = [[]]
+    }
+  }
+
+  _blobToBase64(blob) {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.readAsDataURL(blob)
+    })
+  }
 }
+
+
+

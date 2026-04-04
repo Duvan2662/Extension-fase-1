@@ -7,7 +7,7 @@ import { exportToExcel, downloadBlob } from './excelExporter.js'
 
 const MAX_CAPTURES = 100
 
-// ─── Instancias principales ───────────────────────────────────────────────────
+// ─── Instancias principales ────────────────────────────────────────a───────────
 
 const captureManager = new CaptureManager()
 
@@ -21,7 +21,7 @@ const overlay = new Overlay({
 
 // ─── Inicialización ───────────────────────────────────────────────────────────
 
-function init() {
+async function init() {
   // Evitar doble inicialización si el script se recarga
   if (window.__capturePro_initialized) {
     overlay.mount()
@@ -30,10 +30,13 @@ function init() {
   }
   window.__capturePro_initialized = true
 
+
+  await captureManager.loadFromStorage();
   overlay.mount()
   overlay.show()
 
   // Detectar fuente e informar al overlay
+  updateStats()
   updateSourceInfo()
 
   // Re-detectar periódicamente (el stream puede cargarse después)
@@ -44,6 +47,16 @@ function init() {
   }, 2000)
 
   console.log('[CapturePro] Content script iniciado')
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && (changes.captures || changes.totalCount)) {
+      syncFromStorage()
+    }
+  })
+}
+
+async function syncFromStorage() {
+  await captureManager.loadFromStorage()
+  updateStats()
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -64,6 +77,7 @@ async function handleCapture() {
   try {
     const blob = await captureManager.captureElement(source.el, source.type)
     captureManager.addCapture(blob)
+    await captureManager.saveToStorage()
 
     overlay.screenFlash()
     overlay.flash(`✓ Captura ${captureManager.totalCount} guardada`)
@@ -95,6 +109,7 @@ async function handleCaptureScreen() {
 
     // 5. Guardar igual que las demás capturas
     captureManager.addCapture(blob)
+    await captureManager.saveToStorage()
     overlay.screenFlash()
     overlay.flash(`✓ Pantalla ${captureManager.totalCount} guardada`)
     updateStats()
@@ -105,7 +120,7 @@ async function handleCaptureScreen() {
   }
 }
 
-function handleDeleteLast() {
+async function handleDeleteLast() {
   const removed = captureManager.removeLastCapture()
 
   if (!removed) {
@@ -115,11 +130,13 @@ function handleDeleteLast() {
 
   overlay.flash('🗑 Última captura eliminada')
   updateStats()
+  await captureManager.saveToStorage()
 }
 
-function handleNewRow() {
+async function handleNewRow() {
   const prevCount = captureManager.currentRow.length
   captureManager.insertRowBreak()
+  await captureManager.saveToStorage()
   const newRowIdx = captureManager.rows.length
 
   if (prevCount > 0) {
@@ -155,6 +172,7 @@ async function handleExport() {
     // Limpiar memoria después de exportar
     const countBefore = captureManager.totalCount
     captureManager.dispose()
+    await chrome.storage.local.remove(['captures', 'totalCount'])
 
     console.log(`[CapturePro] ${countBefore} capturas exportadas y memoria liberada`)
     updateStats()
