@@ -171,12 +171,19 @@ async function handleExport() {
   try {
     const xlsxBlob = await exportToExcel(captureManager, casoPrueba)
 
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')
-      .slice(0, 19)
+    const now = new Date()
 
-    downloadBlob(xlsxBlob, `capturas_${timestamp}.xlsx`)
+    const fecha = now.toLocaleDateString('es-CO')
+      .split('/')
+      .map(n => n.padStart(2, '0'))
+      .join('-') // DD-MM-AAAA
+
+    const hora = now.toTimeString()
+      .split(' ')[0]
+      .replace(/:/g, '-') // HH-MM-SS
+
+    const filename = `Evidencia - ${fecha} - ${hora}.xlsx`
+    downloadBlob(xlsxBlob, filename)
 
     overlay.flash(`Excel descargado (${captureManager.totalCount} imgs)`)
 
