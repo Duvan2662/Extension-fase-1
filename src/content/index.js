@@ -90,13 +90,13 @@ async function handleCapture() {
 
 async function handleCaptureScreen() {
   if (captureManager.totalCount >= MAX_CAPTURES) {
-    overlay.flash(`⚠ Límite de ${MAX_CAPTURES} capturas`, true)
+    overlay.flash(`Límite de ${MAX_CAPTURES} capturas`, true)
     return
   }
 
   try {
     // 1. Ocultar overlay para que no aparezca en la captura
-    overlay.hide()
+    overlay.hideInstant()
 
     // 2. Esperar 2 frames para asegurar que el overlay desapareció del render
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -105,18 +105,18 @@ async function handleCaptureScreen() {
     const blob = await captureManager.captureScreen()
 
     // 4. Volver a mostrar el overlay
-    overlay.show()
+    overlay.showAfterCapture()
 
     // 5. Guardar igual que las demás capturas
     captureManager.addCapture(blob)
     await captureManager.saveToStorage()
     overlay.screenFlash()
-    overlay.flash(`✓ Pantalla ${captureManager.totalCount} guardada`)
+    overlay.flash(`Pantalla ${captureManager.totalCount} guardada`)
     updateStats()
   } catch (err) {
     overlay.show() // siempre restaurar
     console.error('[CapturePro] Error al capturar pantalla:', err)
-    overlay.flash(`⚠ ${err.message}`, true)
+    overlay.flash(`${err.message}`, true)
   }
 }
 

@@ -182,6 +182,30 @@ export class Overlay {
     this.visible = false
   }
 
+  // Nueva: oculta instantáneo sin transición (para capturas)
+  hideInstant() {
+    this.el.style.transition = 'none'
+    this.el.style.opacity = '0'
+    this.el.style.pointerEvents = 'none'
+    this.el.style.transform = 'translateY(-6px) scale(0.98)'
+    this.visible = false
+  }
+
+  showAfterCapture() {
+    // Primero remueve los estilos inline (sin transición aún)
+    this.el.style.transition = 'none'
+    this.el.style.opacity = ''
+    this.el.style.pointerEvents = ''
+    this.el.style.transform = ''
+    this.el.classList.remove('hidden')
+
+    // En el siguiente frame, re-habilita la transición CSS
+    requestAnimationFrame(() => {
+      this.el.style.transition = ''
+    })
+    this.visible = true
+  }
+
   toggle() {
     if (this.visible) this.hide()
     else this.show()
