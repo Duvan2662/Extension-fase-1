@@ -150,15 +150,26 @@ async function handleNewRow() {
 
 async function handleExport() {
   if (captureManager.totalCount === 0) {
-    overlay.flash('⚠ No hay capturas para exportar', true)
+    overlay.flash('No hay capturas para exportar', true)
     return
   }
 
+  // ── NUEVO: pedir caso de prueba ──
+  let casoPrueba = ''
+  try {
+    casoPrueba = await overlay.promptCasoPrueba()
+    // casoPrueba puede ser '' si no escribió nada — igual continúa
+  } catch (e) {
+    // Usuario canceló con Escape o botón Cancelar
+    return
+  }
+
+
   overlay.setExporting(true)
-  overlay.flash('⏳ Generando Excel...')
+  overlay.flash('Generando Excel...')
 
   try {
-    const xlsxBlob = await exportToExcel(captureManager)
+    const xlsxBlob = await exportToExcel(captureManager, casoPrueba)
 
     const timestamp = new Date()
       .toISOString()
@@ -167,7 +178,7 @@ async function handleExport() {
 
     downloadBlob(xlsxBlob, `capturas_${timestamp}.xlsx`)
 
-    overlay.flash(`✓ Excel descargado (${captureManager.totalCount} imgs)`)
+    overlay.flash(`Excel descargado (${captureManager.totalCount} imgs)`)
 
     // Limpiar memoria después de exportar
     const countBefore = captureManager.totalCount
@@ -178,7 +189,7 @@ async function handleExport() {
     updateStats()
   } catch (err) {
     console.error('[CapturePro] Error al exportar:', err)
-    overlay.flash(`⚠ Error: ${err.message}`, true)
+    overlay.flash(`Error: ${err.message}`, true)
   } finally {
     overlay.setExporting(false)
   }

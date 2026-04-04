@@ -30,7 +30,7 @@ export function downloadBlob(blob, filename = 'capturas.xlsx') {
   }, 60000)
 }
 
-export async function exportToExcel(captureManager) {
+export async function exportToExcel(captureManager, casoPrueba = '') {
   const ExcelJS = (await import('exceljs')).default || (await import('exceljs'))
   const workbook = new ExcelJS.Workbook()
   const sheet = workbook.addWorksheet('Capturas')
@@ -40,6 +40,11 @@ export async function exportToExcel(captureManager) {
 
   // ENCABEZADO
   sheet.getCell('A1').value = 'Caso:'
+  // ── NUEVO: solo escribe si hay texto ──
+  if (casoPrueba) {
+    sheet.getCell('A2').value = casoPrueba
+  }
+
   sheet.getCell('A3').value = 'Cédula:'
   sheet.getCell('A4').value = 'Fecha:'
   sheet.getCell('B4').value = new Date().toLocaleDateString('es-CO')

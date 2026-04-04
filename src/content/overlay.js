@@ -21,6 +21,8 @@ export class Overlay {
     if (document.getElementById('capturepro-overlay')) {
       this.el = document.getElementById('capturepro-overlay')
       this._bindEvents()
+      // Reutilizar modal si ya existe
+      this._modalEl = document.getElementById('cp-modal-backdrop')
       return
     }
 
@@ -38,6 +40,13 @@ export class Overlay {
     this.el.className = 'hidden'
     this.el.innerHTML = this._template()
     document.body.appendChild(this.el)
+
+    // ── NUEVO: montar modal ──
+    this._modalEl = document.createElement('div')
+    this._modalEl.id = 'cp-modal-backdrop'
+    this._modalEl.innerHTML = this._modalTemplate()
+    document.body.appendChild(this._modalEl)
+    this._bindModalEvents()
 
     this._bindEvents()
     this.visible = false
@@ -292,4 +301,105 @@ export class Overlay {
       this.el = null
     }
   }
+
+  _modalTemplate() {
+  return `
+    <div id="cp-modal">
+      <div id="cp-modal-title">Exportar Excel</div>
+      <div id="cp-modal-subtitle">Caso de prueba (opcional)</div>
+      <input
+        id="cp-modal-input"
+        type="text"
+        placeholder="Ej: Validar que el campo solo acepte números..."
+        maxlength="200"
+      />
+      <div id="cp-modal-actions">
+        <button id="cp-modal-cancel">Cancelar</button>
+        <button id="cp-modal-confirm">Exportar</button>
+      </div>
+    </div>
+  `
+}
+
+_bindModalEvents() {
+  const cancelBtn = this._modalEl.querySelector('#cp-modal-cancel')
+  const confirmBtn = this._modalEl.querySelector('#cp-modal-confirm')
+  const input = this._modalEl.querySelector('#cp-modal-input')
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && this._modalEl.classList.contains('visible')) {
+      this._rejectModal?.()
+    }
+  })
+
+  // Click fuera del modal
+  this._modalEl.addEventListener('click', (e) => {
+    if (e.target === this._modalEl) {
+      this._rejectModal?.()
+    }
+  })
+
+  cancelBtn.addEventListener('click', () => {
+    this._rejectModal?.()
+  })
+
+  confirmBtn.addEventListener('click', () => {
+    this._resolveModal?.(input.value.trim())
+  })
+
+  // Enter confirma
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      this._resolveModal?.(input.value.trim())
+    }
+  })
+}
+
+/**
+ * Muestra el modal y devuelve una Promise con el texto ingresado.
+ * Resuelve con string (vacío si no escribió nada).
+ * Rechaza si el usuario cancela.
+ */
+promptCasoPrueba() {
+  return new Promise((resolve, reject) => {
+    const input = this._modalEl.querySelector('#cp-modal-input')
+    input.value = ''
+
+    this._resolveModal = (value) => {
+      this._closeModal()
+      resolve(value) // puede ser '' — está bien
+    }
+
+    this._rejectModal = () => {
+      this._closeModal()
+      reject(new Error('cancelled'))
+    }
+
+    // Mostrar con animación
+    this._modalEl.classList.add('visible')
+    // Focus después de la transición
+    setTimeout(() => input.focus(), 50)
+  })
+}
+
+_closeModal() {
+  this._modalEl.classList.remove('visible')
+  this._resolveModal = null
+  this._rejectModal = null
+}
+
+unmount() {
+  if (this.el) {
+    this.el.remove()
+    this.el = null
+  }
+  // ── NUEVO ──
+  if (this._modalEl) {
+    this._modalEl.remove()
+    this._modalEl = null
+  }
+}
+
+
 }

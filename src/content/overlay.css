@@ -329,3 +329,125 @@
   z-index: 2147483646;
   animation: cp-flash-anim 0.25s ease-out forwards;
 }
+
+
+/* ── Modal caso de prueba ── */
+#cp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2147483648;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+#cp-modal-backdrop.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#cp-modal {
+  background: #0f1115;
+  border: 1px solid #1c1f26;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  width: 300px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  transform: translateY(-8px) scale(0.97);
+  transition: transform 0.2s ease;
+}
+
+#cp-modal-backdrop.visible #cp-modal {
+  transform: translateY(0) scale(1);
+}
+
+#cp-modal-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a8c3ff;
+  margin-bottom: 6px;
+}
+
+#cp-modal-subtitle {
+  font-size: 11px;
+  color: #6f7685;
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 14px;
+}
+
+#cp-modal-input {
+  all: initial;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  background: #16181f;
+  border: 1px solid #22252d;
+  border-radius: 7px;
+  color: #e6e9ef;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 12px;
+  margin-bottom: 14px;
+  transition: border-color 0.15s ease;
+  caret-color: #6399f0;
+}
+
+#cp-modal-input:focus {
+  outline: none;
+  border-color: rgba(99, 153, 240, 0.5);
+}
+
+#cp-modal-input::placeholder {
+  color: #3a3f4a;
+}
+
+#cp-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+#cp-modal-cancel {
+  all: initial;
+  padding: 7px 14px;
+  background: #16181f;
+  border: 1px solid #22252d;
+  border-radius: 7px;
+  color: #6f7685;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+#cp-modal-cancel:hover {
+  background: #1c1f26;
+  color: #c9ceda;
+}
+
+#cp-modal-confirm {
+  all: initial;
+  padding: 7px 14px;
+  background: rgba(99, 153, 240, 0.14);
+  border: 1px solid rgba(99, 153, 240, 0.25);
+  border-radius: 7px;
+  color: #c9dcff;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+#cp-modal-confirm:hover {
+  background: rgba(99, 153, 240, 0.22);
+  border-color: rgba(99, 153, 240, 0.4);
+  color: #ffffff;
+}
