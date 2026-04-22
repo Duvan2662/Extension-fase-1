@@ -81,42 +81,82 @@ export class CaptureManager {
   }
 
   /**
-   * Captura el elemento fuente y devuelve una Promise<Blob>
-   * Usa toBlob() para eficiencia vs toDataURL()
+   * Captura el elemento fuente y devuelve una Promise<Blob>.
+   * Ejecuta drawImage dentro de un requestAnimationFrame para asegurar que
+   * la GPU haya commiteado el frame actual antes de leer el framebuffer.
+   * Si detecta un frame negro, reintenta hasta MAX_ATTEMPTS veces.
    */
   captureElement(sourceEl, type) {
+    const MAX_ATTEMPTS = 3
+    let attempts = 0
+
     return new Promise((resolve, reject) => {
-      const srcW = type === 'video' ? sourceEl.videoWidth : sourceEl.width
-      const srcH = type === 'video' ? sourceEl.videoHeight : sourceEl.height
+      const tryCapture = () => {
+        // Sincronizar con el ciclo de render del browser
+        requestAnimationFrame(() => {
+          const srcW = type === 'video' ? sourceEl.videoWidth : sourceEl.width
+          const srcH = type === 'video' ? sourceEl.videoHeight : sourceEl.height
 
-      if (!srcW || !srcH) {
-        reject(new Error('Elemento sin dimensiones. ¿Está activo el stream?'))
-        return
-      }
-
-      const { w, h } = this._computeDimensions(srcW, srcH)
-      const { canvas, ctx } = this._getOffscreenCanvas(w, h)
-
-      try {
-        ctx.clearRect(0, 0, w, h)
-        ctx.drawImage(sourceEl, 0, 0, w, h)
-      } catch (e) {
-        reject(new Error(`drawImage falló: ${e.message}`))
-        return
-      }
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error('toBlob devolvió null'))
+          if (!srcW || !srcH) {
+            reject(new Error('Elemento sin dimensiones. ¿Está activo el stream?'))
             return
           }
-          resolve(blob)
-        },
-        'image/jpeg',
-        JPEG_QUALITY
-      )
+
+          const { w, h } = this._computeDimensions(srcW, srcH)
+          const { canvas, ctx } = this._getOffscreenCanvas(w, h)
+
+          try {
+            ctx.clearRect(0, 0, w, h)
+            ctx.drawImage(sourceEl, 0, 0, w, h)
+          } catch (e) {
+            reject(new Error(`drawImage falló: ${e.message}`))
+            return
+          }
+
+          // Detectar frame negro antes de exportar
+          if (attempts < MAX_ATTEMPTS - 1 && this._isFrameBlack(ctx, w, h)) {
+            attempts++
+            console.warn(`[CapturePro] Frame negro detectado, reintentando (${attempts}/${MAX_ATTEMPTS - 1})...`)
+            setTimeout(tryCapture, 50)
+            return
+          }
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error('toBlob devolvió null'))
+                return
+              }
+              resolve(blob)
+            },
+            'image/jpeg',
+            JPEG_QUALITY
+          )
+        })
+      }
+
+      tryCapture()
     })
+  }
+
+  /**
+   * Muestrea 5 píxeles distribuidos en el canvas para detectar frames negros.
+   * Devuelve true si todos los píxeles muestreados son muy oscuros.
+   */
+  _isFrameBlack(ctx, w, h) {
+    const points = [
+      [Math.floor(w * 0.25), Math.floor(h * 0.25)],
+      [Math.floor(w * 0.75), Math.floor(h * 0.25)],
+      [Math.floor(w * 0.5),  Math.floor(h * 0.5)],
+      [Math.floor(w * 0.25), Math.floor(h * 0.75)],
+      [Math.floor(w * 0.75), Math.floor(h * 0.75)],
+    ]
+
+    for (const [x, y] of points) {
+      const [r, g, b] = ctx.getImageData(x, y, 1, 1).data
+      if (r > 15 || g > 15 || b > 15) return false
+    }
+    return true
   }
 
   /**

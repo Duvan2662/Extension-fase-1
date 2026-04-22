@@ -1,16 +1,18 @@
 // overlay.js — Interfaz flotante draggable
 
 export class Overlay {
-  constructor({ onCapture, onExport, onNewRow, onDeleteLast, onCaptureScreen }) {
+  constructor({ onCapture, onExport, onNewRow, onDeleteLast, onDeleteAll, onCaptureScreen }) {
     this.onCapture = onCapture
     this.onExport = onExport
     this.onNewRow = onNewRow
     this.onDeleteLast = onDeleteLast
+    this.onDeleteAll = onDeleteAll
     this.onCaptureScreen = onCaptureScreen
     this.el = null
     this.visible = false
     this._dragState = null
     this._flashTimeout = null
+    this._confirmModalEl = null
   }
 
   /**
@@ -23,6 +25,7 @@ export class Overlay {
       this._bindEvents()
       // Reutilizar modal si ya existe
       this._modalEl = document.getElementById('cp-modal-backdrop')
+      this._confirmModalEl = document.getElementById('cp-confirm-modal-backdrop')
       return
     }
 
@@ -47,6 +50,12 @@ export class Overlay {
     this._modalEl.innerHTML = this._modalTemplate()
     document.body.appendChild(this._modalEl)
     this._bindModalEvents()
+
+    this._confirmModalEl = document.createElement('div')
+    this._confirmModalEl.id = 'cp-confirm-modal-backdrop'
+    this._confirmModalEl.innerHTML = this._confirmModalTemplate()
+    document.body.appendChild(this._confirmModalEl)
+    this._bindConfirmModalEvents()
 
     this._bindEvents()
     this.visible = false
@@ -75,23 +84,25 @@ export class Overlay {
           <div id="cp-count">0</div>
           <div style="font-size:9px;color:#444;margin-top:2px">capturas</div>
         </div>
-        <span id="cp-row-info">Fila 1</span>
+        <div id="cp-stats-right">
+          <span id="cp-row-info">Fila 1</span>
+          <div id="cp-icon-actions">
+            <button class="cp-icon-btn" id="cp-btn-delete-last" title="Eliminar última captura">⌫</button>
+            <button class="cp-icon-btn delete-all" id="cp-btn-delete-all" title="Eliminar todas las capturas">🗑</button>
+          </div>
+        </div>
       </div>
 
       <span id="cp-source">Fuente: <span id="cp-source-tag">detectando...</span></span>
 
       <div id="cp-buttons">
         <button class="cp-btn capture" id="cp-btn-capture">
-          <span class="cp-btn-icon">⬤</span>
-          Capturar
+          <span class="cp-btn-icon">📱</span>
+          Capturar dispositivo
         </button>
         <button class="cp-btn screen" id="cp-btn-screen">
-          <span class="cp-btn-icon">🖥</span>
-          Capturar pantalla
-        </button>
-        <button class="cp-btn delete" id="cp-btn-delete">
-          <span class="cp-btn-icon">⌫</span>
-          Eliminar última
+          <span class="cp-btn-icon">💻</span>
+          Capturar pantalla completa
         </button>
         <button class="cp-btn newrow" id="cp-btn-newrow">
           <span class="cp-btn-icon">↵</span>
@@ -133,8 +144,14 @@ export class Overlay {
       this.onCaptureScreen()
     })
 
-    this.el.querySelector('#cp-btn-delete').addEventListener('click', () => {
+    this.el.querySelector('#cp-btn-delete-last').addEventListener('click', () => {
       this.onDeleteLast()
+    })
+
+    this.el.querySelector('#cp-btn-delete-all').addEventListener('click', () => {
+      this.promptDeleteAll()
+        .then(() => this.onDeleteAll())
+        .catch(() => { /* cancelado */ })
     })
 
     this.el.querySelector('#cp-btn-newrow').addEventListener('click', () => {
@@ -285,6 +302,8 @@ export class Overlay {
     const captureBtn = this.el.querySelector('#cp-btn-capture')
     const newRowBtn = this.el.querySelector('#cp-btn-newrow')
     const screenBtn = this.el.querySelector('#cp-btn-screen')
+    const deleteLastBtn = this.el.querySelector('#cp-btn-delete-last')
+    const deleteAllBtn = this.el.querySelector('#cp-btn-delete-all')
 
     if (excelBtn) {
       excelBtn.disabled = exporting
@@ -293,6 +312,8 @@ export class Overlay {
     if (captureBtn) captureBtn.disabled = exporting
     if (newRowBtn) newRowBtn.disabled = exporting
     if (screenBtn) screenBtn.disabled = exporting
+    if (deleteLastBtn) deleteLastBtn.disabled = exporting
+    if (deleteAllBtn) deleteAllBtn.disabled = exporting
   }
 
   unmount() {
@@ -389,15 +410,78 @@ _closeModal() {
   this._rejectModal = null
 }
 
+// ── Modal confirmación: Eliminar todas las capturas ──
+
+_confirmModalTemplate() {
+  return `
+    <div id="cp-confirm-modal">
+      <div id="cp-confirm-title">Eliminar capturas</div>
+      <div id="cp-confirm-body">¿Deseas eliminar <strong>todas</strong> las capturas? Esta acción no se puede deshacer.</div>
+      <div id="cp-confirm-actions">
+        <button id="cp-confirm-cancel">Cancelar</button>
+        <button id="cp-confirm-ok">Eliminar todo</button>
+      </div>
+    </div>
+  `
+}
+
+_bindConfirmModalEvents() {
+  const cancelBtn = this._confirmModalEl.querySelector('#cp-confirm-cancel')
+  const okBtn = this._confirmModalEl.querySelector('#cp-confirm-ok')
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && this._confirmModalEl.classList.contains('visible')) {
+      this._rejectConfirm?.()
+    }
+  })
+
+  this._confirmModalEl.addEventListener('click', (e) => {
+    if (e.target === this._confirmModalEl) {
+      this._rejectConfirm?.()
+    }
+  })
+
+  cancelBtn.addEventListener('click', () => {
+    this._rejectConfirm?.()
+  })
+
+  okBtn.addEventListener('click', () => {
+    this._resolveConfirm?.()
+  })
+}
+
+promptDeleteAll() {
+  return new Promise((resolve, reject) => {
+    this._resolveConfirm = () => {
+      this._closeConfirmModal()
+      resolve()
+    }
+    this._rejectConfirm = () => {
+      this._closeConfirmModal()
+      reject(new Error('cancelled'))
+    }
+    this._confirmModalEl.classList.add('visible')
+  })
+}
+
+_closeConfirmModal() {
+  this._confirmModalEl.classList.remove('visible')
+  this._resolveConfirm = null
+  this._rejectConfirm = null
+}
+
 unmount() {
   if (this.el) {
     this.el.remove()
     this.el = null
   }
-  // ── NUEVO ──
   if (this._modalEl) {
     this._modalEl.remove()
     this._modalEl = null
+  }
+  if (this._confirmModalEl) {
+    this._confirmModalEl.remove()
+    this._confirmModalEl = null
   }
 }
 

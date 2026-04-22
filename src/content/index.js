@@ -14,6 +14,7 @@ const captureManager = new CaptureManager()
 const overlay = new Overlay({
   onCapture: handleCapture,
   onDeleteLast: handleDeleteLast,
+  onDeleteAll: handleDeleteAll,
   onExport: handleExport,
   onNewRow: handleNewRow,
   onCaptureScreen: handleCaptureScreen,
@@ -47,16 +48,9 @@ async function init() {
   }, 2000)
 
   console.log('[CapturePro] Content script iniciado')
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && (changes.captures || changes.totalCount)) {
-      syncFromStorage()
-    }
-  })
-}
-
-async function syncFromStorage() {
-  await captureManager.loadFromStorage()
-  updateStats()
+  // NOTA: No escuchamos chrome.storage.onChanged porque el content script es
+  // el único escritor de storage. Hacerlo causaba loadFromStorage() concurrentes
+  // que corrompían this.rows con filas duplicadas y datos acumulativos.
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -88,18 +82,24 @@ async function handleCapture() {
   }
 }
 
+let _screenCapturing = false
+
 async function handleCaptureScreen() {
+  if (_screenCapturing) return // ignorar clics mientras hay captura en curso
+
   if (captureManager.totalCount >= MAX_CAPTURES) {
     overlay.flash(`Límite de ${MAX_CAPTURES} capturas`, true)
     return
   }
 
+  _screenCapturing = true
   try {
     // 1. Ocultar overlay para que no aparezca en la captura
     overlay.hideInstant()
 
-    // 2. Esperar 2 frames para asegurar que el overlay desapareció del render
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+    // 2. Esperar a que el compositor renderice el frame sin el overlay.
+    //    2 RAF no siempre son suficientes en GPUs lentas — 150ms es más robusto.
+    await new Promise(r => setTimeout(r, 150))
 
     // 3. Capturar
     const blob = await captureManager.captureScreen()
@@ -117,6 +117,8 @@ async function handleCaptureScreen() {
     overlay.show() // siempre restaurar
     console.error('[CapturePro] Error al capturar pantalla:', err)
     overlay.flash(`${err.message}`, true)
+  } finally {
+    _screenCapturing = false
   }
 }
 
@@ -131,6 +133,14 @@ async function handleDeleteLast() {
   overlay.flash('🗑 Última captura eliminada')
   updateStats()
   await captureManager.saveToStorage()
+}
+
+async function handleDeleteAll() {
+  const countBefore = captureManager.totalCount
+  captureManager.dispose()
+  await chrome.storage.local.remove(['captures', 'totalCount'])
+  overlay.flash(`🗑 ${countBefore} capturas eliminadas`)
+  updateStats()
 }
 
 async function handleNewRow() {
